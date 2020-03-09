@@ -1,0 +1,7 @@
+# Configured Messages
+
+# Message to send when a user doesn't have permission
+no-permission: "&cNo permission"
+
+# Message to send when the console tries to execute a command it can'the
+no-console-command: "&cThe console cannot use this command"

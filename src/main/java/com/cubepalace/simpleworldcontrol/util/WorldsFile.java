@@ -1,4 +1,4 @@
-package com.cubepalace.simpleworldcontrol;
+package com.cubepalace.simpleworldcontrol.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +10,8 @@ import java.util.UUID;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+
+import com.cubepalace.simpleworldcontrol.SimpleWorldControl;
 
 public class WorldsFile {
 

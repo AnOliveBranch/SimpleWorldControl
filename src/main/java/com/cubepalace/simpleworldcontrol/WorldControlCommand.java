@@ -24,7 +24,7 @@ public class WorldControlCommand implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 		if (cmd.getName().equalsIgnoreCase("worldcontrol")) {
 			if (!sender.hasPermission("worldcontrol.cmd")) {
-				sender.sendMessage(ChatColor.RED + "No permission");
+				sender.sendMessage(instance.getNoPerm());
 				return true;
 			}
 
@@ -35,11 +35,12 @@ public class WorldControlCommand implements CommandExecutor {
 
 			if (args[0].equalsIgnoreCase("reload")) {
 				if (!sender.hasPermission("worldcontrol.relaod")) {
-					sender.sendMessage(ChatColor.RED + "No permission");
+					sender.sendMessage(instance.getNoPerm());
 					return true;
 				}
 
 				instance.getWorldsFile().reload();
+				instance.getCustomConfig().reload();
 				sender.sendMessage(ChatColor.GREEN + "SimpleWorldControl has been reloaded");
 				return true;
 			}
@@ -50,98 +51,58 @@ public class WorldControlCommand implements CommandExecutor {
 			}
 
 			if (args[0].equalsIgnoreCase("view")) {
-				List<Integer> worldSettings;
-
 				if (args.length > 1 && args[1].equalsIgnoreCase("here")) {
 					if (!(sender instanceof Player)) {
-						sender.sendMessage(ChatColor.RED + "The console cannot use this command");
+						sender.sendMessage(instance.getNoConsoleCommand());
 						return true;
 					}
 
 					if (!sender.hasPermission("worldcontrol.view.here")) {
-						sender.sendMessage(ChatColor.RED + "No permission");
+						sender.sendMessage(instance.getNoPerm());
 						return true;
 					}
 
 					Player p = (Player) sender;
 
-					sender.sendMessage(ChatColor.GOLD + "Settings for " + p.getWorld().getName());
-					if (!instance.getWorlds().containsKey(p.getWorld().getUID())) {
-						sender.sendMessage(ChatColor.GOLD + "\tTime control: " + ChatColor.RED + "No");
-						sender.sendMessage(ChatColor.GOLD + "\tWeather control: " + ChatColor.RED + "No");
-						return true;
-					} else {
-						worldSettings = instance.getWorlds().get(p.getWorld().getUID());
-						sender.sendMessage(
-								ChatColor.GOLD + "\tTime control: " + (worldSettings.get(0) == -1 ? ChatColor.RED + "No"
-										: ChatColor.GREEN + "" + worldSettings.get(0)));
-						sender.sendMessage(ChatColor.GOLD + "\tWeather control: "
-								+ (worldSettings.get(1) == -1 ? ChatColor.RED + "No"
-										: worldSettings.get(1) == 0 ? ChatColor.GREEN + "Sunny"
-												: worldSettings.get(1) == 1 ? ChatColor.GREEN + "Rainy"
-														: ChatColor.GREEN + "Stormy"));
-					}
+					sendSettings(sender, p.getWorld().getUID());
 
 				} else if (args.length > 1 && args[1].equalsIgnoreCase("controlled")) {
 					if (!sender.hasPermission("worldcontrol.view.controlled")) {
-						sender.sendMessage(ChatColor.RED + "No permission");
+						sender.sendMessage(instance.getNoPerm());
 						return true;
 					}
 
 					sender.sendMessage(ChatColor.GOLD + "--[--- World Control Settings ---]--");
-					for (UUID world : instance.getWorlds().keySet()) {
-						worldSettings = instance.getWorlds().get(world);
-						sender.sendMessage(ChatColor.GOLD + "Settings for " + instance.getServer().getWorld(world).getName());
-						sender.sendMessage(
-								ChatColor.GOLD + "\tTime control: " + (worldSettings.get(0) == -1 ? ChatColor.RED + "No"
-										: ChatColor.GREEN + "" + worldSettings.get(0)));
-						sender.sendMessage(ChatColor.GOLD + "\tWeather control: "
-								+ (worldSettings.get(1) == -1 ? ChatColor.RED + "No"
-										: worldSettings.get(1) == 0 ? ChatColor.GREEN + "Sunny"
-												: worldSettings.get(1) == 1 ? ChatColor.GREEN + "Rainy"
-														: ChatColor.GREEN + "Stormy"));
-					}
+					for (UUID world : instance.getWorlds().keySet())
+						sendSettings(sender, world);
 
 				} else if (args.length > 1 && args[1].equalsIgnoreCase("all")) {
 					if (!sender.hasPermission("worldcontrol.view.all")) {
-						sender.sendMessage(ChatColor.RED + "No permission");
+						sender.sendMessage(instance.getNoPerm());
 						return true;
 					}
 
 					sender.sendMessage(ChatColor.GOLD + "--[--- World Control Settings ---]--");
-					for (World world : instance.getServer().getWorlds()) {
-						sender.sendMessage(ChatColor.GOLD + "Settings for " + world.getName());
-						if (!instance.getWorlds().containsKey(world.getUID())) {
-							sender.sendMessage(ChatColor.GOLD + "\tTime control: " + ChatColor.RED + "No");
-							sender.sendMessage(ChatColor.GOLD + "\tWeather control: " + ChatColor.RED + "No");
-							return true;
-						} else {
-							worldSettings = instance.getWorlds().get(world.getUID());
-							sender.sendMessage(ChatColor.GOLD + "\tTime control: "
-									+ (worldSettings.get(0) == -1 ? ChatColor.RED + "No"
-											: ChatColor.GREEN + "" + worldSettings.get(0)));
-							sender.sendMessage(ChatColor.GOLD + "\tWeather control: "
-									+ (worldSettings.get(1) == -1 ? ChatColor.RED + "No"
-											: worldSettings.get(1) == 0 ? ChatColor.GREEN + "Sunny"
-													: worldSettings.get(1) == 1 ? ChatColor.GREEN + "Rainy"
-															: ChatColor.GREEN + "Stormy"));
-						}
-					}
+					for (World world : instance.getServer().getWorlds())
+						sendSettings(sender, world.getUID());
+
 				} else {
 					showHelp(sender);
 					return true;
 				}
+
 			} else if (args[0].equalsIgnoreCase("set")) {
 				if (!(sender instanceof Player)) {
-					sender.sendMessage(ChatColor.RED + "The console cannot use this command");
+					sender.sendMessage(instance.getNoConsoleCommand());
 					return true;
 				}
 
 				Player p = (Player) sender;
 				List<Integer> worldSettings;
+				
 				if (args[1].equalsIgnoreCase("time")) {
 					if (!sender.hasPermission("worldcontrol.set.time")) {
-						sender.sendMessage(ChatColor.RED + "No permission");
+						sender.sendMessage(instance.getNoPerm());
 						return true;
 					}
 
@@ -155,7 +116,7 @@ public class WorldControlCommand implements CommandExecutor {
 					try {
 						time = Integer.parseInt(args[2]);
 					} catch (NumberFormatException e) {
-						sender.sendMessage(ChatColor.RED + "Given time must be a number, got \"" + args[2] + "\"");
+						sender.sendMessage(ChatColor.RED + "Time must be a number, got \"" + args[2] + "\"");
 						return true;
 					}
 
@@ -173,15 +134,15 @@ public class WorldControlCommand implements CommandExecutor {
 					}
 
 					worldSettings.set(0, time);
-
 					p.getWorld().setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
 					p.getWorld().setTime(time);
 					instance.setWorldSettings(p.getWorld(), worldSettings);
-					sender.sendMessage(ChatColor.GREEN + "Set time in world \"" + p.getWorld().getName() + "\" to " + time);
-					return true;
+					sender.sendMessage(
+							ChatColor.GREEN + "Set time in world \"" + p.getWorld().getName() + "\" to " + time);
+
 				} else if (args[1].equalsIgnoreCase("weather")) {
 					if (!sender.hasPermission("worldcontrol.set.weather")) {
-						sender.sendMessage(ChatColor.RED + "No permission");
+						sender.sendMessage(instance.getNoPerm());
 						return true;
 					}
 
@@ -217,7 +178,6 @@ public class WorldControlCommand implements CommandExecutor {
 					instance.setWorldSettings(p.getWorld(), worldSettings);
 					sender.sendMessage(
 							ChatColor.GREEN + "Set the weather in \"" + p.getWorld().getName() + "\" to " + args[2]);
-					return true;
 				} else {
 					showHelp(sender);
 					return true;
@@ -225,7 +185,7 @@ public class WorldControlCommand implements CommandExecutor {
 
 			} else if (args[0].equalsIgnoreCase("remove")) {
 				if (!(sender instanceof Player)) {
-					sender.sendMessage(ChatColor.RED + "The console cannot use this command");
+					sender.sendMessage(instance.getNoConsoleCommand());
 					return true;
 				}
 
@@ -234,7 +194,7 @@ public class WorldControlCommand implements CommandExecutor {
 				if (args[1].equalsIgnoreCase("all")) {
 					if (!sender.hasPermission("worldcontrol.remove.time")
 							|| !sender.hasPermission("worldcontrol.remove.weather")) {
-						sender.sendMessage(ChatColor.RED + "No permission");
+						sender.sendMessage(instance.getNoPerm());
 						return true;
 					}
 
@@ -244,10 +204,12 @@ public class WorldControlCommand implements CommandExecutor {
 					return true;
 				} else if (args[1].equalsIgnoreCase("time")) {
 					if (!sender.hasPermission("worldcontrol.remove.time")) {
-						sender.sendMessage(ChatColor.RED + "No permission");
+						sender.sendMessage(instance.getNoPerm());
 						return true;
 					}
 
+					
+					
 					if (!instance.getWorlds().containsKey(p.getWorld().getUID())
 							|| instance.getWorlds().get(p.getWorld().getUID()).get(0) == -1) {
 						sender.sendMessage(ChatColor.RED + p.getWorld().getName() + " is not being time controlled");
@@ -258,15 +220,15 @@ public class WorldControlCommand implements CommandExecutor {
 						instance.removeWorldSettings(p.getWorld());
 					} else {
 						List<Integer> worldSettings = instance.getWorlds().get(p.getWorld().getUID());
-						worldSettings.set(0, -1);
+						worldSettings.set(-1, worldSettings.get(1));
 						instance.setWorldSettings(p.getWorld(), worldSettings);
 					}
-					
+
 					p.getWorld().setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-					return true;
+					sender.sendMessage(ChatColor.GREEN + "Removed time controls for \"" + p.getWorld().getName() + "\"");
 				} else if (args[1].equalsIgnoreCase("weather")) {
 					if (!sender.hasPermission("worldcontrol.remove.weather")) {
-						sender.sendMessage(ChatColor.RED + "No permission");
+						sender.sendMessage(instance.getNoPerm());
 						return true;
 					}
 
@@ -280,10 +242,9 @@ public class WorldControlCommand implements CommandExecutor {
 						instance.removeWorldSettings(p.getWorld());
 					} else {
 						List<Integer> worldSettings = instance.getWorlds().get(p.getWorld().getUID());
-						worldSettings.set(1, -1);
+						worldSettings.set(worldSettings.get(0), -1);
 						instance.setWorldSettings(p.getWorld(), worldSettings);
 					}
-					return true;
 				} else {
 					showHelp(sender);
 				}
@@ -310,8 +271,8 @@ public class WorldControlCommand implements CommandExecutor {
 			sender.sendMessage(ChatColor.GOLD + "/worldcontrol set time <time>: " + ChatColor.AQUA
 					+ "Permanently sets the time in the current world");
 		if (sender.hasPermission("worldcontrol.set.weather"))
-			sender.sendMessage(ChatColor.GOLD + "/worldcontrol set weather <\"sun\"|\"rain\"|\"storm\">: " + ChatColor.AQUA
-					+ "Permanently sets the weather in the current world");
+			sender.sendMessage(ChatColor.GOLD + "/worldcontrol set weather <\"sun\"|\"rain\"|\"storm\">: "
+					+ ChatColor.AQUA + "Permanently sets the weather in the current world");
 		if (sender.hasPermission("worldcontrol.remove.time") && sender.hasPermission("worldcontrol.remove.weather"))
 			sender.sendMessage(ChatColor.GOLD + "/worldcontrol remove all: " + ChatColor.AQUA
 					+ "Removes all control in the current world");
@@ -323,5 +284,21 @@ public class WorldControlCommand implements CommandExecutor {
 					+ "Removes weather control in the current world");
 		if (sender.hasPermission("worldcontrol.reload"))
 			sender.sendMessage(ChatColor.GOLD + "/worldcontrol reload: " + ChatColor.AQUA + "Reloads the plugin");
+	}
+
+	private void sendSettings(CommandSender sender, UUID world) {
+		sender.sendMessage(ChatColor.GOLD + "Settings for " + instance.getServer().getWorld(world).getName());
+		if (!instance.getWorlds().containsKey(world)) {
+			sender.sendMessage(ChatColor.GOLD + "\tTime control: " + ChatColor.RED + "No");
+			sender.sendMessage(ChatColor.GOLD + "\tWeather control: " + ChatColor.RED + "No");
+		} else {
+			List<Integer> worldSettings = instance.getWorlds().get(world);
+			sender.sendMessage(ChatColor.GOLD + "  Time control: " + (worldSettings.get(0) == -1 ? ChatColor.RED + "No"
+					: ChatColor.GREEN + "" + worldSettings.get(0)));
+			sender.sendMessage(ChatColor.GOLD + "  Weather control: " + (worldSettings.get(1) == -1
+					? ChatColor.RED + "No"
+					: worldSettings.get(1) == 0 ? ChatColor.GREEN + "Sunny"
+							: worldSettings.get(1) == 1 ? ChatColor.GREEN + "Rainy" : ChatColor.GREEN + "Stormy"));
+		}
 	}
 }
