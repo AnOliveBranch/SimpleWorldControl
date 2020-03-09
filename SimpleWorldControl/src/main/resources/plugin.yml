@@ -2,6 +2,8 @@ name: SimpleworldControl
 version: 1.0
 author: RoboticPlayer
 main: com.cubepalace.simpleworldcontrol.SimpleWorldControl
+api-version: 1.15
+website: https://github.com/RyanEHenderson/SimpleWorldControl
 
 commands:
   worldcontrol:
@@ -13,17 +15,43 @@ permissions:
     description: Access to everything
     children:
       worldcontrol.cmd: true
-      worldcontrol.view: true
-      worldcontrol.set: true
-      worldcontrol.remove: true
+      worldcontrol.view.*: true
+      worldcontrol.set.*: true
+      worldcontrol.remove.*: true
       worldcontrol.reload: true
+  worldcontrol.view.*:
+    description: Access to all view options
+    children:
+      worldcontrol.view.here: true
+      worldcontrol.view.controlled: true
+      worldcontrol.view.all: true
+  worldcontrol.view.here:
+    description: Ability to view settings for your current world
+  worldcontrol.view.controlled:
+    description: Ability to view settings for all controlled worlds
+  worldcontrol.view.all:
+    description: Ability to view settings for all server worlds
+  worldcontrol.set.*:
+    description: Ability to set time and weather controls
+    children:
+      worldcontrol.set.time: true
+      worldcontrol.set.weather: true
+  worldcontrol.remove.*:
+    description: Ability to remove time and weather controls
+    children:
+      worldcontrol.remove.time: true
+      worldcontrol.remove.weather: true
   worldcontrol.cmd:
     description: Access to /worldcontrol
   worldcontrol.list:
     description: Access to view current world control options
-  worldcontrol.set:
-    description: Ability to set world control for the current world
-  worldcontrol.remove:
-    description: Ability to remove world controls for the current world
+  worldcontrol.set.time:
+    description: Ability to set time control for the current world
+  worldcontrol.set.weather:
+    description: Ability to set weather control for the current world
+  worldcontrol.remove.time:
+    description: Ability to remove time controls for the current world
+  worldcontrol.remove.weather:
+    description: Ability to remove weather controls for the current world
   worldcontrol.reload:
     description: Ability to reload the plugin

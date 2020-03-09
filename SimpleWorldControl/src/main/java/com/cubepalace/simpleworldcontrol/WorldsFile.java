@@ -2,11 +2,12 @@ package com.cubepalace.simpleworldcontrol;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
-import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -15,7 +16,7 @@ public class WorldsFile {
 	private SimpleWorldControl instance;
 	private File file;
 	private FileConfiguration config;
-	
+
 	public WorldsFile(SimpleWorldControl instance, String fileName) {
 		this.instance = instance;
 		file = new File(instance.getDataFolder(), fileName);
@@ -28,7 +29,7 @@ public class WorldsFile {
 		}
 		config = YamlConfiguration.loadConfiguration(file);
 	}
-	
+
 	public void save() {
 		try {
 			config.save(file);
@@ -36,30 +37,36 @@ public class WorldsFile {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void reload() {
 		config = YamlConfiguration.loadConfiguration(file);
 		save();
 	}
-	
+
 	public void updateWorldList() {
-		Map<World, List<Integer>> worlds = instance.getWorlds();
+		Map<UUID, List<Integer>> worlds = instance.getWorlds();
 		Map<String, List<Integer>> worldStrings = new HashMap<String, List<Integer>>();
-		for (World world : worlds.keySet()) {
-			List<Integer> ints = worlds.get(world);
-			worldStrings.put(world.getName(), ints);
+		for (UUID worldUUID : worlds.keySet()) {
+			List<Integer> ints = worlds.get(worldUUID);
+			worldStrings.put(worldUUID.toString(), ints);
 		}
 		config.set("worldSettings", worldStrings);
 		save();
 	}
-	
-	public Map<World, List<Integer>> loadToListWorlds() {
-		Map<World, List<Integer>> worlds = new HashMap<World, List<Integer>>();
-		
-		for (String worldName : config.getStringList("worldSettings")) {
-			
+
+	public Map<UUID, List<Integer>> loadToListWorlds() {
+		Map<UUID, List<Integer>> worlds = new HashMap<UUID, List<Integer>>();
+		try {
+			for (String worldUUID : config.getConfigurationSection("worldSettings").getKeys(false)) {
+				List<Integer> values = new ArrayList<Integer>();
+				for (String value : config.getStringList("worldSettings." + worldUUID)) {
+					values.add(Integer.valueOf(value));
+				}
+				worlds.put(UUID.fromString(worldUUID), values);
+			}
+		} catch (NullPointerException e) {
+
 		}
-		
 		return worlds;
 	}
 }
