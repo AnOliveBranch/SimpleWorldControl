@@ -1,0 +1,29 @@
+name: SimpleworldControl
+version: 1.0
+author: RoboticPlayer
+main: com.cubepalace.simpleworldcontrol.SimpleWorldControl
+
+commands:
+  worldcontrol:
+    description: Control the world and time
+    aliases: [simpleworldcontrol, swc, wc]
+    
+permissions:
+  worldcontrol.*:
+    description: Access to everything
+    children:
+      worldcontrol.cmd: true
+      worldcontrol.view: true
+      worldcontrol.set: true
+      worldcontrol.remove: true
+      worldcontrol.reload: true
+  worldcontrol.cmd:
+    description: Access to /worldcontrol
+  worldcontrol.list:
+    description: Access to view current world control options
+  worldcontrol.set:
+    description: Ability to set world control for the current world
+  worldcontrol.remove:
+    description: Ability to remove world controls for the current world
+  worldcontrol.reload:
+    description: Ability to reload the plugin
